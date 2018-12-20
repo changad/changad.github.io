@@ -1,20 +1,22 @@
 ---
 layout: post
 title:  "第三方登录之微信登录"
-date:   2017-06-02 14:47:13 +0000
+date:   2018-06-02 14:47:13 +0000
 categories: xiaochang update
 ---
 
 配置参数
-      //微信登录
-        'wx_login' => array(
-            'app_id' 		=> 	'wx33f4048e5e538e1e',
-            'app_secret'	=>	'2b0d702b0811ecdb1481398c83498353',
-            //'return_url'	=>	"http://".$_SERVER['HTTP_HOST']."/index.php/Home/Logins/return_wx_url",
-          ),
+
+                  //微信登录
+                    'wx_login' => array(
+                        'app_id' 		=> 	'wx33f4048e5e538e1e',
+                        'app_secret'	=>	'2b0d702b0811ecdb1481398c83498353',
+                        //'return_url'	=>	"http://".$_SERVER['HTTP_HOST']."/index.php/Home/Logins/return_wx_url",
+                      ),
           
           
 控制器方法
+
              /**
              * 微信登录
              */
