@@ -1,10 +1,11 @@
-
 ---
 layout: post
 title:  "TP5框架整合phpqrcode二维码"
 date:   2017-01-06 17:05:13 +0000
 categories: xiaochang update
 ---
+
+
 
 前段时间写了一个App接口的项目，用到了二维码。在网上查了查资料，找了个简单的方法，把步骤梳理一下。
 
