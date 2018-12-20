@@ -113,7 +113,7 @@ categories: xiaochang update
 
     }
     
-   /**
+    /**
      * 生成签名
      * @return 签名，本函数不覆盖sign成员变量，如要设置签名需要调用SetSign方法赋值
      */
@@ -134,7 +134,7 @@ categories: xiaochang update
         return $result;
     }
 
-   /**
+    /**
      * 将xml转为array
      * @param  string $xml xml字符串
      * @return array       转换得到的数组
@@ -148,7 +148,7 @@ categories: xiaochang update
         return $result;
     }
 
-   /**
+    /**
      * 
      * 产生随机字符串，不长于32位
      * @param int $length
@@ -165,7 +165,7 @@ categories: xiaochang update
         return $str;
     }
 
-   /**
+    /**
      * 输出xml字符
      * @throws WxPayException
     **/
