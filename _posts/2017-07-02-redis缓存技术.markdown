@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "redis缓存技术"
-date:   2017-07-02 14:47:13 +0000
+date:   2018-07-02 14:47:13 +0000
 categories: xiaochang update
 ---
 
