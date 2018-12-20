@@ -1,0 +1,177 @@
+---
+layout: post
+title:  "第三方登录之QQ登录"
+date:   2017-06-02 14:47:13 +0000
+categories: xiaochang update
+---
+
+参数配置
+
+      'qq_login' => array(
+          'app_id' 		=> '1014321xxx',
+          'app_key' 		=> '90d372138cd3f799cc945302ac0xxx',
+          'return_url' 	=> "http://xxx/index.php/Home/Logins/return_qq_url",
+        ),
+
+控制器方法
+
+          /**
+         * [qq_login 口口登录授权
+         * @return [type] [description]
+         */
+        public function qq_login()
+        {
+          //http://xxx.com/index.php/Home/Logins/qq_login
+          $return_url = I('get.return_url');
+          session('return_url',$return_url);
+          $q_config = C('qq_login');
+          //
+          $QQ = new \Org\Util\Qlogin($q_config);
+              $re_url = $QQ->get_code_rederect_url();
+              redirect($re_url);
+        }
+        
+        /**
+             * 授权成功  返回地址
+             * @return [type] [description]
+             */
+            public function return_qq_url()
+            {
+              $q_config = C('qq_login');
+              $QQ = new \Org\Util\Qlogin($q_config);
+              if(!$_GET['code']){
+                //获取code
+                  $re_url = $QQ->get_code_rederect_url();
+                  redirect($re_url);
+              }else{
+                $code = $_GET['code'];
+                //获取token
+                $access_token = $QQ->get_access_token($code);
+                //获取openid
+                $openid = $QQ->get_openid($access_token);
+                //获取用户信息
+                $uid = M('users')->where(array('openid'=>$openid))->getField('id');
+                if(!$uid){
+                  $res = $QQ->get_user_info($openid,$access_token);
+                  if($res->ret == 0){
+                    $data['nickname'] = $res->nickname;
+                    //$data['province'] = $res->province;
+                    $data['city'] = $res->city;
+                    $data['province'] = $res->province;
+                    $data['openid'] = $openid;
+                    $data['headimgurl'] = $res->figureurl_1;
+                    $data['addtime'] = time();
+                    $uid = M('users')->add($data);
+                  }else{
+                    $this->error('授权失败','qq_login');
+                  }
+                }
+                session('user_id',$uid);
+                $login_url = session('return_url');
+                if($login_url){
+                  redirect("$login_url");
+                }else{
+                  $this->redirect('home/index/index');
+                }
+
+                }
+            }
+            
+            
+自己封装的类库
+
+                <?php
+
+                namespace  Org\Util;
+                use Org\Util ;
+
+                class Qlogin
+                {
+
+                  private $appid;
+                  private $appkey;
+                  private $call_url; //回调地址
+
+                  const GET_AUTH_CODE_URL = "https://graph.qq.com/oauth2.0/authorize?";
+                    const GET_ACCESS_TOKEN_URL = "https://graph.qq.com/oauth2.0/token?";
+                    const GET_OPENID_URL = "https://graph.qq.com/oauth2.0/me?";
+                    const GET_USER_INFO = "https://graph.qq.com/user/get_user_info?";
+
+                    public function __construct($options)
+                   {
+                      $this->appid = isset($options['app_id'])?$options['app_id']:'';
+                    $this->appkey = isset($options['app_key'])?$options['app_key']:'';
+                    $this->call_url = isset($options['return_url'])?$options['return_url']:'';
+                    }
+                    /**
+                     *
+                     */
+                    public function get_code_rederect_url($url)
+                    {
+                        $red_url = 'http://'.$_SERVER['HTTP_HOST'].'/index.php/'.$url;
+                        return   self::GET_AUTH_CODE_URL.'response_type=code&client_id='.$this->appid.'&redirect_uri='.URLEncode($this->call_url).'&scope=get_user_info&state=state';
+                    }
+                    /**
+                     * 获取Access_Token
+                     */
+                    public function get_access_token($code)
+                    {
+                        $url = $this->get_access_token_url($code);
+                        $res =  $this->get($url);
+                        $arr = explode('&',$res);
+                        $arr = $arr[0];
+                        $arr = explode('=',$arr);
+                        $access_token = $arr[1];
+                        return $access_token;
+                    }
+                    /**
+                     * 获取Access_Token请求催的url
+                     */
+                    public function get_access_token_url($code)
+                    {
+                        return  self::GET_ACCESS_TOKEN_URL."grant_type=authorization_code&client_id=".$this->appid."&client_secret=".$this->appkey."&code=".$code."&redirect_uri=".URLEncode($this->call_url)."&state=state";
+                    }
+
+                    public function get_user_info($openid,$access_token)
+                    {
+                        //$access_token = '5716A95131B6E92F644A711832735CBF';
+                        $url = self::GET_USER_INFO."access_token=".$access_token."&oauth_consumer_key=".$this->appid."&openid=".$openid;
+                        $res =  json_decode($this->get($url));
+                        return $res;
+                    }
+                    /**
+                     * 
+                     * @param  [type] $access_token 
+                     * @return [type]   openid            
+                     */
+                    public function get_openid($access_token)
+                    {
+                        $url = self::GET_OPENID_URL."access_token=".$access_token;
+                        $response = $this->get($url);
+                         //--------检测错误是否发生
+                        if(strpos($response, "callback") !== false){
+                            $lpos = strpos($response, "(");
+                            $rpos = strrpos($response, ")");
+                            $response = substr($response, $lpos + 1, $rpos - $lpos -1);
+                        }
+                        $user = json_decode($response);
+                        return $user->openid;
+                    }
+
+
+                    //CURL请求的函数http_request() 
+                    //通过https 中的get 或 post
+                    public function get($url)
+                    {
+                        $curl = curl_init();
+                        curl_setopt($curl, CURLOPT_URL, $url);
+                        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+                        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+                        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+                        $output = curl_exec($curl);
+                        curl_close($curl);
+                        return $output;
+                    }
+
+
+                }
