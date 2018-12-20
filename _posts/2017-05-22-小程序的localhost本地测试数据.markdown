@@ -10,7 +10,6 @@ categories: xiaochang update
 最近也是查看各种微信小程序的文档，试了试可不可以在本地进行后端的数据交互，
 
 通过对form标签绑定的formSubmit事件
-
            form catchsubmit="formSubmit"  
 表单提交的数据在js中接收
 
