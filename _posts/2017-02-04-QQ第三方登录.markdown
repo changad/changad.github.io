@@ -1,0 +1,35 @@
+---
+layout: post
+title:  "QQ第三方登录"
+date:   2017-02-04 14:47:13 +0000
+categories: xiaochang update
+---
+
+
+注意事项：每次修改回调地址都要进行验证，否则无效
+
+流程：1、下载SDK，解压在项目的根目录，访问SDK文件，填写基本配置，只保留API目录即可。
+2、SDK简介：
+Recorder.class.php 配置读写与SESSION获取；
+URI.class.php 基于CURL库的get、post请求；
+Oauth.class.php Oauth相关URL动态拼接与token操作。
+
+qqConnectAPI.php 入口文件
+Recorder.class.php 用于配置appid、appkey
+项目使用：
+1、登陆方法 qqlogin.php
+先引入入口文件
+//实例化Oauth类
+      $Oauth = new Oauth();
+2、回调地址方法 callback.php
+再实例化 new Oauth();
+      //获取accesstoken
+      $accesstoken = $oauth->qq_callback();
+      //获取openid
+      $openid = $oauth->get_openid();
+3、index.php
+//实例化QC类，传入$token,$openid获取userinfo
+    $qc = new Qc($sesstoken,$openid);
+    $userinfo = $qc->get_user_info();
+
+index.php -----> qqlogin.php ------->callback.php
