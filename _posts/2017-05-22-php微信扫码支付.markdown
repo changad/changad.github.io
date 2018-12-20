@@ -19,8 +19,15 @@ categories: xiaochang update
 
 封装的微信支付类
 
-
-  	$parame['name'],// 商品描述
+ 	/**
+    	 * 微信支付
+     	* 所用到的请求参数
+     	* @return array jssdk需要用到的数据
+     	*/
+    	public static function getParameters($parame,$openid,$config)
+    	{
+        	$order=array(
+            	'body'          =>  $parame['name'],// 商品描述
 		    'total_fee'     =>  $parame['total'] * 100,// 订单金额  以(分)为单位
 		    //'total_fee'     =>  1,
 		    'out_trade_no'  =>  $parame['order_num'],// 订单号
