@@ -38,37 +38,34 @@ $data: 返回的数据
         
         
 返回xml数据格式的方法
-              /**
+
+            /**
                 * 按xml方式输出通信数据
                 * @param integer $code 状态码
                 * @param string $message 提示信息
                 * @param array $data 数据
                 * return string
                 */
-                public static function xmlEncode($code, $message, $data = array()) {
-                              //判断状态吗是否合法
+                 public static function xmlEncode($code, $message, $data = array()) {
+               //判断状态吗是否合法
                   if(!is_numeric($code)) {
                     return '';
                   }
-                              //将参数拼成数组
+                //将参数拼成数组
                   $result = array(
                     'code' => $code,
                     'message' => $message,
                     'data' => $data,
                   );
-                              //拼接xml
+                   //拼接xml
                   header("Content-Type:text/xml");
                   $xml = "\n";
                   $xml .= "\n";
-
                   $xml .= self::xmlToEncode($result);
-
                   $xml .= "";
                   echo $xml;
                 }
-
               public static function xmlToEncode($data) {
-
                 $xml = $attr = "";
                 foreach($data as $key => $value) {
                   if(is_numeric($key)) {
