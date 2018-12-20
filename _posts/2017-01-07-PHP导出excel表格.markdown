@@ -1,0 +1,45 @@
+---
+layout: post
+title:  "PHP导出excel表格"
+date:   2017-01-07 17:57:13 +0000
+categories: xiaochang update
+---
+php导出excel表格的方法
+
+                //用户信息导出
+                public function excel(){
+                    $DB_Server = "localhost";      
+                    $DB_Username = "root";      
+                    $DB_Password = "root";      
+                    $DB_DBName = "haoxiguan";      
+                    $DB_TBLName = "users";      
+
+                    $savename = '好习惯用户信息'.date("Y-m-d H:i:s",time());   
+                    $Connect = @mysql_connect($DB_Server, $DB_Username, $DB_Password) or die("Couldn't connect.");      
+                    mysql_query("Set Names 'utf8'");  
+                    $file_type = "vnd.ms-excel";      
+                    $file_ending = "xls";  
+                    header("Content-Type: application/$file_type;charset=big5");   
+                    header("Content-Disposition: attachment; filename=".$savename.".$file_ending");      
+                    //header("Pragma: no-cache");         
+
+                    $now_date = date("Y-m-j H:i:s");       
+                    $title = "数据库名:$DB_DBName,数据表:$DB_TBLName,备份日期:$now_date";       
+
+                    $sql = "Select * from $DB_TBLName";       
+                    $ALT_Db = @mysql_select_db($DB_DBName, $Connect) or die("Couldn't select database");      
+                    $result = @mysql_query($sql,$Connect) or die(mysql_error());    
+
+                    echo("$title\n");       
+                    $sep = "\t";       
+                    for ($i = 0; $i < mysql_num_fields($result); $i++) {  
+                        echo mysql_field_name($result,$i) . "\t";       
+                    }       
+                    print("\n");       
+                    $i = 0;       
+                    while($row = mysql_fetch_row($result)) {       
+                        $schema_insert = "";  
+                        for($j=0; $j<mysql_num_fields($result);$j++) {="" if(!isset($row[$j]))="" $schema_insert="" .="NULL" .$sep;="" elseif="" ($row[$j]="" !="" )="" else="" }="" "",="" $schema_insert);="" ;="" print(trim($schema_insert));="" print="" "\n";="" $i++;="" return="" (true);="" <="" pre="">
+                 只用把上面的数据库信息修改后放入项目中就可以使用了。
+
+                 </mysql_num_fields($result);$j++)>
