@@ -1,7 +1,303 @@
 ---
 layout: post
-title:  "php微信扫码支付"
-date:   2018-05-22 17:05:13 +0000
+title:  "tp5整合微信扫码支付及公众号支付"
+date:   2017-05-22 17:05:13 +0000
 categories: xiaochang update
 ---
-aa
+配置文件
+
+/* 支付宝支付设置 */
+return [
+		'APPID'              => 'wx07309f6cf1ba4633', // 微信支付APPID
+        'MCHID'              => '1259416801', //商户号
+        'KEY'                => 'dhyu87i3k5l6kj1hnm08jhyte89h4123', // 微信支付KEY
+        'APPSECRET'          => '1b7dc22d850b9b9669d0dc5ffe697a93',  //公众帐号secert
+        'NOTIFY_URL'         => $_SERVER['HTTP_HOST']."/w_return_url", // 课程支付接收支付状态的连接
+
+];
+封装的微信支付类
+
+  $parame['name'],// 商品描述
+            'total_fee'     =>  $parame['total'] * 100,// 订单金额  以(分)为单位
+            //'total_fee'     =>  1,
+            'out_trade_no'  =>  $parame['order_num'],// 订单号
+            'product_id'    =>  $parame['id'],// 商品id
+            'trade_type'    =>  'NATIVE',// 原生扫码支付
+        );
+        // 统一下单 获取prepay_id
+        $unified_order=self::unifiedOrder($order,$config);  
+        return $unified_order;  
+    }
+
+
+    /**
+     * 微信公众号支付
+     * 所用到的请求参数
+     * @return array jssdk需要用到的数据
+     */
+    public static function getParameters_js($parame,$openid,$config)
+    {
+        //
+        $order=array(
+            'body'          =>  $parame['name'],// 商品描述
+            'total_fee'     =>  $parame['total'] * 100,// 订单金额  以(分)为单位
+            'out_trade_no'  =>  $parame['order_num'],// 订单号
+            'trade_type'    =>  'JSAPI',// JSAPI公众号支付
+            'openid'        =>  $openid,// 获取到的openid
+        );
+        // 统一下单 获取prepay_id
+        $unified_order=self::unifiedOrder($order,$config); 
+        // 获取当前时间戳
+        $time=time();
+        // 组合jssdk需要用到的数据
+        $data=array(
+            'appId'     =>$weixinpay_config['APPID'], //appid
+            'timeStamp' =>strval($time), //时间戳
+            'nonceStr'  =>$unified_order['nonce_str'],// 随机字符串
+            'package'   =>'prepay_id='.$unified_order['prepay_id'],// 预支付交易会话标识
+            'signType'  =>'MD5'//加密方式
+        );
+        // 生成签名
+        $data['paySign']=$this->makeSign($data);
+        return $data;
+    }
+
+
+/********************************************************************
+    
+
+*************************************************************/
+	/**
+     * 统一下单
+     * @param  array $order 订单 必须包含支付所需要的参数 body(产品描述)、total_fee(订单金额)、out_trade_no(订单号)、product_id(产品id)、trade_type(类型：JSAPI，NATIVE，APP)
+     */
+    public static function unifiedOrder($order,$weixinpay_config)
+    {
+        //
+        $config=array(
+            'appid'             =>$weixinpay_config['APPID'],
+            'mch_id'            =>$weixinpay_config['MCHID'],
+            'nonce_str'         =>self::getNonceStr(),
+            'spbill_create_ip'  =>$_SERVER['REMOTE_ADDR'],
+            'notify_url'        =>$weixinpay_config['NOTIFY_URL']
+            );
+        // 合并配置数据和订单数据
+        $data=array_merge($order,$config);
+        // 生成签名
+        $sign=self::makeSign($data,$weixinpay_config['KEY']);
+        $data['sign']=$sign;
+        $xml=self::toXml($data);
+        $url = 'https://api.mch.weixin.qq.com/pay/unifiedorder';//接收xml数据的文件
+        $header[] = "Content-type: text/xml";//定义content-type为xml,注意是数组
+        $ch = curl_init ($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 兼容本地没有指定curl.cainfo路径的错误
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
+        $response = curl_exec($ch);
+        if(curl_errno($ch)){
+            // 显示报错信息；终止继续执行
+            die(curl_error($ch));
+        }
+        curl_close($ch);
+        //转换成数组
+        $result=self::toArray($response);
+        return  $result;
+
+    }
+    /**
+     * 生成签名
+     * @return 签名，本函数不覆盖sign成员变量，如要设置签名需要调用SetSign方法赋值
+     */
+    public static function makeSign($data,$key)
+    {
+        // 去空
+        $data=array_filter($data);
+        //签名步骤一：按字典序排序参数
+        ksort($data);
+        //将数组转成url形式
+        $string_a=http_build_query($data);
+        $string_a=urldecode($string_a);
+        $string_sign_temp=$string_a."&key=".$key;
+        $sign = md5($string_sign_temp);
+        $result=strtoupper($sign);
+        return $result;
+    }
+
+    /**
+     * 将xml转为array
+     * @param  string $xml xml字符串
+     * @return array       转换得到的数组
+     */
+    public static function toArray($xml){   
+        //禁止引用外部xml实体
+        libxml_disable_entity_loader(true);
+        $result= json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);        
+        return $result;
+    }
+
+    /**
+     * 
+     * 产生随机字符串，不长于32位
+     * @param int $length
+     * @return 产生的随机字符串
+     */
+    public static function getNonceStr($length = 32) 
+    {
+        $chars = "abcdefghijklmnopqrstuvwxyz0123456789";  
+        $str ="";
+        for ( $i = 0; $i < $length; $i++ )  {  
+            $str .= substr($chars, mt_rand(0, strlen($chars)-1), 1);  
+        } 
+        return $str;
+    }
+
+    /**
+     * 输出xml字符
+     * @throws WxPayException
+    **/
+    public static function toXml($data){
+        if(!is_array($data) || count($data) <= 0){
+            throw new WxPayException("数组数据异常！");
+        }
+        $xml = "";
+        foreach ($data as $key=>$val){
+            if (is_numeric($val)){
+                $xml.="<".$key.">".$val."";
+            }else{
+                $xml.="<".$key.">";
+            }
+        }
+        $xml.="";
+        return $xml; 
+    }
+    /**
+     * 验证
+     * @return array 返回数组格式的notify数据
+     */
+    public  static function notify(){
+        // 获取xml
+        $xml=file_get_contents('php://input', 'r'); 
+        // 转成php数组
+        $data=self::toArray($xml);
+        // 保存原sign
+        $data_sign=$data['sign'];
+        // sign不参与签名
+        unset($data['sign']);
+        $sign=self::makeSign($data);
+        // 判断签名是否正确  判断支付状态
+        if ($sign===$data_sign && $data['return_code']=='SUCCESS' && $data['result_code']=='SUCCESS') {
+            $result=$data;
+        }else{
+            $result=false;
+        }
+        // 返回状态给微信服务器
+        if ($result) {
+            $str='';
+        }else{
+            $str='';
+        }
+        echo $str;
+        return $result;
+    }
+}
+
+
+控制器操作
+	'微信支付',
+				'order_num'		=>	time().rand(1000,9999),
+				'id'			=>	1,
+			);
+		//配置欣喜
+		$config = Config('wxpay');
+		//实例化类
+		$wechatPay = new  Wechatpay();
+		$res = $wechatPay::getParameters($order,$config);
+		$url = urlencode($res['code_url']);
+		dump($url);die;
+       //
+	}
+
+	/**
+	 * *
+	 * 微信公众号支付
+	 * JSAPI
+	 */
+	public function w_js_pay()
+	{
+		//配置欣喜
+		$config = Config('wxpay');
+        //获取code,为获取openid做准备
+        $code = isset($_GET['code']) ? $_GET['code'] : null;
+         /**
+	     * 微信公众号支付
+	     * // 如果没有get参数没有code；则重定向去获取openid；
+	     */
+        if (empty($code)) {
+            //订单id
+            $order_id = $_GET['order_id'];
+            // 返回的url
+            $redirect_uri=urlencode($_SERVER['HTTP_HOST']."/w_js_pay");
+            //获取code
+            $url='https://open.weixin.qq.com/connect/oauth2/authorize?appid='.$config['APPID'].'&redirect_uri='.$redirect_uri.'&response_type=code&scope=snsapi_base&state='.$order_id.'#wechat_redirect';
+            redirect($url);
+        }else{
+            // 取出订单号
+            $order_id=input('get.state');
+            // 组合获取prepay_id的url
+            //根据code来获得授权access_token及openid
+            $url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=".$config['APPID']."&secret=".$config['APPSECRET']."&code=".$code."&grant_type=authorization_code";
+            // curl获取prepay_id
+            $result = json_decode(https_request($url),true);
+            //获取openid
+            $openid=$result['openid'];
+        }
+        //实例化类
+		$wechatPay = new  Wechatpay();
+        // 获取jssdk需要用到的数据
+        $data=  $wechatPay::getParameters_js($order,$openid,$config);
+        // 将数据分配到前台页面
+        $assign=array(
+            'data'=>json_encode($data)
+            );
+        $this->assign($assign);
+        $this->display();
+	}
+
+	/**
+	 * 支付成功回调地址
+	 */
+	public function notify_url()
+	{
+        $wechatPay = new  Wechatpay();
+        $result=$wechatPay::notify();
+        // 
+        if($result){
+            // 订单号；
+            $order_num = $result['out_trade_no'];
+            //订单业务逻辑处理
+        }
+	}
+
+	/**
+     * 判断是否支付成功
+     */
+    public function is_wpay()
+    {
+        //通过ajax发送请求通过订单状态来判断是否支付成功
+	    //判断是否支付成功
+	    //function is_pay(){
+	    //    var order_num = $('#order_num').val();
+	    //    $.post("{:U('is_wpay')}",{order_num:order_num},function(res){
+	    //        if(res.code == 200){
+	    //            window.location.href = "/index.php/Home/Payok/index";
+	    //        }
+	    //    });
+	    //}
+	    //setInterval(is_pay,3000);
+    }
+
+
+}
