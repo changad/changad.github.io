@@ -1,0 +1,412 @@
+---
+layout: post
+title:  "tp框架整合七牛云上传视频"
+date:   2017-08-30 14:47:13 +0000
+categories: xiaochang update
+---
+
+
+七牛云配置
+
+        return [
+          'ACCESSKEY'  =>  '',
+               'SECRETKEY'  =>  '',
+               'BUCKET'     =>   '',			//空间名
+               'DOMAIN'     =>   '', //空间对外域名
+               'HUBNAME'    =>    '',  
+               'qiniu_notify'=>	, //转码成功后的验证的回调地址
+               'pipeline'  =>  	'' //转码是使用的队列名称
+        ];
+自己封装的七牛云转码类
+
+                /**
+               * 七牛云上传
+               * 业务逻辑操作
+               */
+              namespace  Qu;
+
+              class Qiniu
+              {
+                //配置参数
+                protected $Qiniu_config = [];
+                protected $videoName; //视频名称
+                protected $duration; //
+
+                //单例化
+                // private static $Qiniu;
+                // public function __construct()
+                // {
+                // 	if(self::$Qiniu === null){
+                // 		self::$Qiniu = new \Qu\Qiniu();
+                // 	}
+                // 	return self::$Qiniu;
+                // }
+                //\Qiniu\Auth的单例
+                private static $Auth; 
+                public static function Auth($accessKey, $secretKey)
+                {
+                  if(self::$Auth === null){
+                    self::$Auth = new \Qiniu\Auth($accessKey, $secretKey);
+                  }
+                  return self::$Auth;
+                }
+                //
+                    /**
+                 * 获取七牛云上传视频的token
+                 */
+                public static function getToken($Qiniu_config)
+                {
+                    import('Qiniu.functions');
+                    // 用于签名的公钥和私钥
+                    $accessKey = $Qiniu_config['ACCESSKEY'];
+                    $secretKey = $Qiniu_config['SECRETKEY'];
+                    // 构建鉴权对象
+                    $auth = self::Auth($accessKey, $secretKey);
+                    // 要上传的空间
+                    $bucket = $Qiniu_config['BUCKET'];
+                    // 生成上传 Token
+                    return $auth->uploadToken($bucket);
+                }
+
+                  /**
+                   * 七牛转码
+                   */
+                  public static function qiniuzm($Qiniu_config,$videoName="",$duration=0)
+                  {
+                    //对已经上传到七牛的视频发起异步转码操作
+                  import('Qiniu.functions');
+                    // 用于签名的公钥和私钥
+                    $accessKey = $Qiniu_config['ACCESSKEY'];
+                    $secretKey = $Qiniu_config['SECRETKEY'];
+                  $auth = self::Auth($accessKey, $secretKey);
+                  //要转码的文件所在的空间和文件名
+                  $bucket = $Qiniu_config['BUCKET'];
+                  //回调地址
+                    //$notify_url = $Qiniu_config['qiniu_notify'];
+                  //转码是使用的队列名称
+                  $pipeline = $Qiniu_config['pipeline'];
+                  $pfop = new \Qiniu\Processing\PersistentFop($auth, $bucket, $pipeline);
+
+                  $fops = "avthumb/mp4/ab/160k/ar/44100/acodec/libfaac/r/30/vb/2400k/vcodec/libx264/s/1280x720/autoscale/1/stripmeta/0";
+                  //转换后的文件名
+                  //名称前缀
+                  $name_qz = $pipeline;
+                  $savekey = \Qiniu\base64_urlSafeEncode($bucket.':'.$name_qz.'_'.$videoName);
+                  $fops = $fops.'|saveas/'.$savekey;
+                  $pfop->execute($videoName, $fops);
+                  list($id, $err) =$pfop->execute($videoName, $fops);
+                  // if ($err == null) {
+                 //      	$PersistentFop = new \Qiniu\Processing\PersistentFop($auth, $bucket);
+                //   		// 触发持久化处理后返回的 Id
+                //   		// 通过persistentId查询该 触发持久化处理的状态
+                //   		$status = $PersistentFop::status($id);
+                //   		dump($status);
+                 //  	}
+                  //视频的url
+                  return $name_qz.'_'.$videoName;
+                  }
+
+                  /**
+                   * 删除转码前的视频
+                   */
+                  public static function del($Qiniu_config,$videoName="")
+                  {
+                    //对已经上传到七牛的视频发起异步转码操作
+                  import('Qiniu.functions');
+                    // 用于签名的公钥和私钥
+                    $accessKey = $Qiniu_config['ACCESSKEY'];
+                    $secretKey = $Qiniu_config['SECRETKEY'];
+                  $auth = self::Auth($accessKey, $secretKey);
+                    //删除转码前的文件
+                  //初始化BucketManager
+                  $bucketMgr = new \Qiniu\Storage\BucketManager($auth);
+                  $bucket = $Qiniu_config['BUCKET'];
+                  //删除$bucket 中的文件 $key
+                  $bucketMgr->delete($bucket, $videoName);
+                  }
+              }
+控制器操作
+
+              public function index()
+              {
+                    if(Request::instance()->isPost()){
+                        //将字符串转化成数组 多视频上传
+                        $video_url_arr = explode('&',input('post.video_url'));
+                        dump($video_url_arr);
+                    }else{
+                        return $this->fetch();
+                    }
+              }
+
+              /**
+                 * 获取七牛云的token
+                 */
+                public function qiniu_token()
+                {
+                  //配置信息
+                  $config = Config('Qiniu');
+                  //实例化类
+                  $Qiniu = new \Qu\Qiniu();
+                    $token = $Qiniu::getToken($config);
+                    //ajax返回数据token
+                    return ['token' => $token];
+                }
+                /**
+                 * 转吗
+                 */
+                public function zm()
+                {
+                  $videoName = input('get.video_name');
+                $duration = input('get.duration');
+                    //配置信息
+                    $config = Config('Qiniu');
+                //实例化类
+                $Qiniu = new \Qu\Qiniu();
+                $video_url = $Qiniu::qiniuzm($config,$videoName,$duration);
+                //ajax返回数据video_url
+                return array('video_url'=>$video_url);
+                }
+                /**
+                 * 转码成功后回调地址
+                 */
+                public function del()
+                {
+                    $videoName = input('get.video_name');
+                    //配置信息
+                    $config = Config('Qiniu');
+                    $Qiniu = new \Qu\Qiniu();
+                    $Qiniu::del($config,$videoName);
+                }
+上传页面js代码
+
+              $(function() {
+
+                  function getTokenMessage() {
+
+                      var token = {};
+
+                      $.ajax({
+
+                          url:'/qiniu_token',
+
+                          async:false,
+
+                          success:function (data) {
+
+                          token.token = data.token;
+
+                          }
+
+
+              })
+              return token;
+              }
+              var uploader = Qiniu.uploader({
+              runtimes: 'html5,flash,html4',
+              browse_button: 'pickfiles',
+              container: 'container',
+              drop_element: 'container',
+              max_file_size: '1000mb',
+              flash_swf_url: 'bower_components/plupload/js/Moxie.swf',
+              dragdrop: true,
+              chunk_size: '4mb',
+              multi_selection: !(mOxie.Env.OS.toLowerCase()==="ios"),
+              //uptoken_url: '/index.php/Home/Source/qiniu_token',
+              uptoken:getTokenMessage().token,
+              //persistentOps:"avthumb/mp4;avthumb/m3u8/noDomain/1/segtime/15/vb/440k",
+              domain: $('#domain').val(),
+              get_new_uptoken: false,
+              auto_start: true,
+              log_level: 5,
+              init: {
+              'FilesAdded': function(up, files) {
+              $('table').show();
+              $('#success').hide();
+              plupload.each(files, function(file) {
+              //var objfile=$.parseJSON(file);
+              // alert(file.id);
+              // alert(file.getSource);
+              // console.log("file",file);
+              var progress = new FileProgress(file, 'fsUploadProgress');
+              progress.setStatus("等待...");
+              progress.bindUploadCancel(up);
+              });
+              },
+              'BeforeUpload': function(up, file) {
+              var progress = new FileProgress(file, 'fsUploadProgress');
+              var chunk_size = plupload.parseSize(this.getOption('chunk_size'));
+              if (up.runtime === 'html5' && chunk_size) {
+              progress.setChunkProgess(chunk_size);
+              }
+              },
+              'UploadProgress': function(up, file) {
+              var progress = new FileProgress(file, 'fsUploadProgress');
+              var chunk_size = plupload.parseSize(this.getOption('chunk_size'));
+              progress.setProgress(file.percent + "%", file.speed, chunk_size);
+              },
+              'UploadComplete': function() {
+              $('#success').show();
+              },
+              'FileUploaded': function(up, file, info) {
+              var progress = new FileProgress(file, 'fsUploadProgress');
+              progress.setComplete(up, info);
+              //
+              //var domain = up.getOption('domain');
+              //var res = eval('(' + info + ')');
+              // var sourceLink = domain + res.key;//获取上传文件的链接地址
+              //console.log(info);
+              var video_info = JSON.parse(info);
+
+              //获取视频信息
+              //http://oslyovppn.bkt.clouddn.com/hengzhang-2017-05-17-591beeebeef79.mp4?avinfo
+              //视频路径
+              var domain = $('#domain').val();
+              var url = domain+'/'+video_info.key+'?avinfo';
+              //
+              $.get(url,{},function(res){
+              var duration = res.format.duration;
+              //发送ajax转码
+              $.get('{:Url("zm")}',{'video_name':video_info.key,'duration':duration},function(res){
+              //判断是否已上传视频
+              var old_video = $('#video').val();
+              if(old_video == ""){
+              $('#video').val(domain+res.video_url);
+              }else{
+              $('#video').val(old_video+'&'+domain+res.video_url);
+              }
+
+              //删除转码前的视频
+              $.get('{:Url("del")}',{'video_name':video_info.key},function(res){
+
+              });
+              });
+              });
+
+              },
+              'Error': function(up, err, errTip) {
+              $('table').show();
+              var progress = new FileProgress(err.file, 'fsUploadProgress');
+              progress.setError();
+              progress.setStatus(errTip);
+              }
+              }
+              });
+
+              uploader.bind('FileUploaded', function() {
+              //console.log('hello man,a file is uploaded');
+              });
+              $('#container').on(
+              'dragenter',
+              function(e) {
+              e.preventDefault();
+              $('#container').addClass('draging');
+              e.stopPropagation();
+              }
+              ).on('drop', function(e) {
+              e.preventDefault();
+              $('#container').removeClass('draging');
+              e.stopPropagation();
+              }).on('dragleave', function(e) {
+              e.preventDefault();
+              $('#container').removeClass('draging');
+              e.stopPropagation();
+              }).on('dragover', function(e) {
+              e.preventDefault();
+              $('#container').addClass('draging');
+              e.stopPropagation();
+              });
+
+              $('#show_code').on('click', function() {
+              $('#myModal-code').modal();
+              $('pre code').each(function(i, e) {
+              hljs.highlightBlock(e);
+              });
+              });
+
+              $('body').on('click', 'table button.btn', function() {
+              $(this).parents('tr').next().toggle();
+              });
+
+              var getRotate = function(url) {
+              if (!url) {
+              return 0;
+              }
+              var arr = url.split('/');
+              for (var i = 0, len = arr.length; i < len; i++) { if (arr[i] === 'rotate') { return parseInt(arr[i + 1], 10); } } return 0; }; $('#myModal-img .modal-body-footer').find('a').on('click', function() { var img = $('#myModal-img').find('.modal-body img'); var key = img.data('key'); var oldUrl = img.attr('src'); var originHeight = parseInt(img.data('h'), 10);           var fopArr = []; var rotate = getRotate(oldUrl); if (!$(this).hasClass('no-disable-click')) { $(this).addClass('disabled').siblings().removeClass('disabled'); if ($(this).data('imagemogr') !== 'no-rotate') { fopArr.push({ 'fop': 'imageMogr2', 'auto-orient': true, 'strip': true, 'rotate': rotate, 'format': 'png' }); } } else { $(this).siblings().removeClass('disabled'); var imageMogr = $(this).data('imagemogr'); if (imageMogr === 'left') { rotate = rotate - 90 < 0 ? rotate + 270 : rotate - 90; } else if (imageMogr === 'right') { rotate = rotate + 90 > 360 ? rotate - 270 : rotate + 90;
+              }
+              fopArr.push({
+              'fop': 'imageMogr2',
+              'auto-orient': true,
+              'strip': true,
+              'rotate': rotate,
+              'format': 'png'
+              });
+              }
+
+              $('#myModal-img .modal-body-footer').find('a.disabled').each(function() {
+
+              var watermark = $(this).data('watermark');
+              var imageView = $(this).data('imageview');
+              var imageMogr = $(this).data('imagemogr');
+
+              if (watermark) {
+              fopArr.push({
+              fop: 'watermark',
+              mode: 1,
+              image: 'http://www.b1.qiniudn.com/images/logo-2.png',
+              dissolve: 100,
+              gravity: watermark,
+              dx: 100,
+              dy: 100
+              });
+              }
+
+              if (imageView) {
+              var height;
+              switch (imageView) {
+              case 'large':
+              height = originHeight;
+              break;
+              case 'middle':
+              height = originHeight * 0.5;
+              break;
+              case 'small':
+              height = originHeight * 0.1;
+              break;
+              default:
+              height = originHeight;
+              break;
+              }
+              fopArr.push({
+              fop: 'imageView2',
+              mode: 3,
+              h: parseInt(height, 10),
+              q: 100,
+              format: 'png'
+              });
+              }
+
+              if (imageMogr === 'no-rotate') {
+              fopArr.push({
+              'fop': 'imageMogr2',
+              'auto-orient': true,
+              'strip': true,
+              'rotate': 0,
+              'format': 'png'
+              });
+              }
+              });
+
+              var newUrl = Qiniu.pipeline(fopArr, key);
+
+              var newImg = new Image();
+              img.attr('src', 'images/loading.gif');
+              newImg.onload = function() {
+              img.attr('src', newUrl);
+              img.parent('a').attr('href', newUrl);
+              };
+              newImg.src = newUrl;
+              return false;
+              });
+
+              });
