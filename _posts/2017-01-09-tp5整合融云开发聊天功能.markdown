@@ -1,0 +1,119 @@
+---
+layout: post
+title:  "tp5整合融云开发聊天功能"
+date:   2017-01-09 14:47:13 +0000
+categories: xiaochang update
+---
+
+最近在做直播里的聊天室功能，看了两天的开发文档，跟大家分享一下研究成果。
+先浏览下融云在线开发文档（https://www.rongcloud.cn/docs/server.html），看完开发完档再看代码会好理解。 点击进入官方sdk（php版本）下载地址
+（https://github.com/rongcloud/server-sdk-php）
+先在模块目录下配置文件config中配置常量：
+
+          return [
+                  'APP_KEY' => 'xxx',
+            'APP_SECRET' => 'xxx',
+            'JOSNPATH' => 'jsonsource/',
+          ];
+          
+          
+客户端通过融云 SDK 每次连接服务器时，都需要向服务器提供 Token，以便验证身份(具体请参考官方的开发文档),首先都要先获取用户的token值
+获取用户token的方法：
+
+                  /**
+             * 获取token
+             */
+            public function getToken()
+            {
+                       // 获取用户id
+                       $uid = 5;
+                       // 获取token
+                      $token = get_rongcloud_token($uid); //在mommon.php中写的函数
+                      //判断token是否存在
+                      if($token && $token!=false){
+                    $data=array(
+                        'token'=>$token
+                        );
+                    //返回json数据
+                    return self::json(200,'获取token成功',$data);  //这是在php开发app接口返回数据文章中所写的方法，点击查看
+                      }else{
+                    //token不存在
+                    return self::json(400,'获取token失败',null);   //这是在php开发app接口返回数据文章中所写的方法，点击查看
+                      }     
+            }
+在模块下的common.php的函数
+
+                   /**
+             * 根据配置项获取对应的key和secret
+             * @return array key和secret
+             */
+            function get_rong_key_secret()
+            {
+                $key=Config('APP_KEY');
+                $secret=Config('APP_SECRET');
+                $data=array(
+                    'key'=>$key,
+                    'secret'=>$secret
+                    );
+                return $data;
+            }
+            /**
+             * 引入外部类并实例化类
+             */
+            function get_rong_cloud()
+            {
+              vendor('rongyun.rongcloud');
+              // 获取key和secret
+                $key_secret=get_rong_key_secret();
+                // 实例化融云
+                $rong_cloud=new \RongCloud($key_secret['key'],$key_secret['secret']);
+
+                return $rong_cloud;
+            }
+            /**
+             * 获取融云token
+             * @param  integer $uid 用户id
+             * @return integer      token
+             */
+            function get_rongcloud_token($uid)
+            {
+                // 从数据库中获取token
+                $oauthUser=Db('oauth_user')->where('uid',$uid)->find();
+                // 如果有token就返回
+                if(!empty($oauthUser)) {
+                    return $oauthUser['access_token'];
+                }
+                // 获取用户昵称和头像
+                $user=Db('users')->where('id',$uid)->field('username,image')->find();
+                // 用户不存在
+                if (empty($user)) {
+                    return false;
+                }
+                // 获取头像url格式
+                $pic = get_url($user['image']);
+                // 实例化融云
+                $rong_cloud=get_rong_cloud();
+                // 获取token
+                $token_json=$rong_cloud->user()->getToken($uid,$user['username'],$pic);
+                $token_array=json_decode($token_json,true);
+                // 获取token失败
+                if ($token_array['code']!=200) {
+                    return false;
+                }
+                $token=$token_array['token'];
+                $data=array(
+                    'uid'=>$uid,
+                    'type'=>1,
+                    'nickname'=>$user['username'],
+                    'head_img'=>$pic,
+                    'access_token'=>$token
+                    );
+                // 插入数据库
+                $result=Db('chat_user')->insert($data);
+                if ($result > 0) {
+                    return $token;
+                }else{
+                    return false;
+                }
+            }
+其他的业务逻辑都差不多,只用把 $token_json=$rong_cloud->user()->getToken($uid,$user['username'],$pic);得方法换掉对应的方法即可。
