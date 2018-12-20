@@ -1,0 +1,81 @@
+---
+layout: post
+title:  "微信网页授权登录"
+date:   2017-04-02 14:47:13 +0000
+categories: xiaochang update
+---
+
+
+配置信息
+
+            //配置信息
+            private function getWxinfo()
+            {
+            $wxInfo = array(
+              'appid'			=>	'xxxxxxxx', 
+              'appSecret'		=>	'xxxxxxxx',  
+              'redirect_url'	=>	urlencode('http://xxxxxx/index.php/home/login/getWxUserinfo') //回调的url地址
+                );
+            return $wxInfo;
+            }
+1、用户同意授权，获取code
+
+              //获取code
+              public function getCode()
+              {
+              //获取微信配置信息
+              $wxInfo = $this->getWxinfo();
+              //拼接接口 scope有两种方式，一种直接获取，一种是需用户同意获取
+              $url = "https://open.weixin.qq.com/connect/oauth2/authorize?
+              appid=".$wxInfo['appid']."&redirect_uri=".$wxInfo['redirect_url']."&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect";
+              //跳转
+              header('location:'.$url);
+              }
+2、获取用户的基本信息
+
+            //获取微信用户信息
+            public function getWxUserinfo()
+            {
+              //获取code
+              $code = $_GET['code'];
+              //获取access_token oppenid
+              $result = json_decode($this->getAccessToken($code));
+              //获取用户信息
+                    $userInfo = $this->getUserInfo($result->access_token,$result->openid);
+                    dump($userInfo);die;
+            }
+            //http 传输
+            private function http_curl($url,$data=null)
+            {
+              $curl = curl_init();
+              curl_setopt($curl,CURLOPT_URL,$url);
+              curl_setopt($curl,CURLOPT_SSL_VERIFYPEER,false);
+              curl_setopt($curl,CURLOPT_SSL_VERIFYHOST,false);
+              if(!empty($data)){
+                curl_setopt($curl,CURLOPT_POST,1);
+                curl_setopt($curl,CURLOPT_POSTFIELDS,$data);
+              }
+
+              curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
+              $output = curl_exec($curl);
+              curl_close($curl);
+              return $output;
+            }
+            //获取用户信息
+            private function getUserInfo($accessToken,$openId)
+            {
+              //调用接口
+              $url = "https://api.weixin.qq.com/sns/userinfo?access_token=".$accessToken."&openid=".$openId."&lang=zh_CN";
+              $userInfo = $this->http_curl($url);
+              return $userInfo;
+            }
+            //获取access_token和oppenid
+            private function getAccessToken($code)
+            {
+              //获取配置信息
+              $wxInfo = $this->getWxinfo();
+              //调用接口
+              $url = "https://api.weixin.qq.com/sns/oauth2/access_token? appid=".$wxInfo['appid']."&secret=".$wxInfo['appSecret']."&code=".$code."&grant_type=authorization_code";
+              $res = $this->http_curl($url);
+              return $res;
+            }
