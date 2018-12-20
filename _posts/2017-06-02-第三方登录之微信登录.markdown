@@ -1,0 +1,130 @@
+---
+layout: post
+title:  "第三方登录之微信登录"
+date:   2017-06-02 14:47:13 +0000
+categories: xiaochang update
+---
+
+配置参数
+      //微信登录
+        'wx_login' => array(
+            'app_id' 		=> 	'wx33f4048e5e538e1e',
+            'app_secret'	=>	'2b0d702b0811ecdb1481398c83498353',
+            //'return_url'	=>	"http://".$_SERVER['HTTP_HOST']."/index.php/Home/Logins/return_wx_url",
+          ),
+          
+          
+控制器方法
+             /**
+             * 微信登录
+             */
+            public function  wx_login()
+            {
+              $return_url = I('get.return_url');
+              session('return_url',$return_url);
+              $w_config = C('wx_login');
+              $Wx = new \Org\Util\Wlogin($w_config);
+              $code = $_GET['code'];
+              if($code){
+                //获取token
+                $res = $Wx->get_token($code);
+                //获取用户信息
+                $uid = M('users')->where(array('openid'=>$res->openid))->getField('id');
+                if(!$uid){
+                  //获取用户信息
+                  $info = $Wx->getUserInfo($res->access_token,$res->openid);
+                  if($info){
+                    $data['nickname'] = $info->nickname;
+                    //$data['province'] = $info->province;
+                    $data['city'] = $info->city;
+                    $data['province'] = $info->province;
+                    $data['openid'] = $info->openid;
+                    $data['headimgurl'] = $info->headimgurl;
+                    $data['addtime'] = time();
+                    $uid = M('users')->add($data);
+                  }else{
+                    $this->error('授权失败','wx_login');
+                  }
+                }
+                session('user_id',$uid);
+                $login_url = session('return_url');
+                if($login_url){
+                  redirect("$login_url");
+                }else{
+                  $this->redirect('home/index/index');
+                }
+              }else{
+                $re_url = $Wx->get_code_redirect_url();
+                  redirect($re_url);
+              }
+
+            }
+            
+            
+            
+ 自己封装的第三方类库
+ 
+                   <?php
+
+                  namespace Org\Util;
+                  use Org\Util;
+
+                  class Wlogin
+                  {
+                    private $appId;
+                    private $appSecret;
+                    private $return_url;
+
+                    const GET_AUTH_CODE_URL = "https://open.weixin.qq.com/connect/qrconnect?"; //获取code
+                      const GET_ACCESS_TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/access_token?";	//获取token
+                      const GET_USER_INFO = "https://api.weixin.qq.com/sns/userinfo?";	//获取用户信息
+
+
+                      public function  __construct($options)
+                      {
+                        $this->appid = isset($options['app_id']) ? $options['app_id'] : '';
+                        $this->appsecret = isset($options['app_secret'])?$options['app_secret']:'';
+                      $this->call_url = isset($options['return_url'])?$options['return_url']:'';
+                      }
+
+                      //获取用户信息
+                    public function getUserInfo($accessToken,$openId)
+                    {
+                      //调用接口
+                      $url = self::GET_USER_INFO."access_token=".$accessToken."&openid=".$openId."&lang=zh_CN";
+                      $userInfo = $this->get($url);
+                      return json_decode($userInfo);
+                    }
+
+                      /**
+                       * 获取code的url
+                       */
+                      public function get_code_redirect_url()
+                      {
+                        $red_url = 'http://'.$_SERVER['HTTP_HOST'].'/index.php/Home/Logins/wx_login';
+                        return self::GET_AUTH_CODE_URL."appid=".$this->appid."&redirect_uri=".URLEncode($red_url)."&response_type=code&scope=snsapi_login&state=STATE#wechat_redirect";
+                      }
+                      /**
+                       * 获取token
+                       */
+                      public function get_token($code)
+                      {
+                        $url = self::GET_ACCESS_TOKEN_URL."appid=".$this->appid."&secret=".$this->appsecret."&code=".$code."&grant_type=authorization_code";
+                        $res =  $this->get($url);
+                        return json_decode($res);
+                      }
+
+                      //CURL请求的函数http_request() 
+                      //通过https 中的get 或 post
+                      public function get($url)
+                      {
+                          $curl = curl_init();
+                          curl_setopt($curl, CURLOPT_URL, $url);
+                          curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+                          curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+                          curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+                          $output = curl_exec($curl);
+                          curl_close($curl);
+                          return $output;
+                      }
+                  }
