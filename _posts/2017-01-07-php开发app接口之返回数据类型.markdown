@@ -1,0 +1,83 @@
+---
+layout: post
+title:  "php开发app接口之返回数据类型"
+date:   2017-01-07  17:05:13 +0000
+categories: xiaochang update
+---
+
+开发app接口返回的数据有两种，一种是返回json格式数据，一种是xml格式数据。将返回数据的方法写成静态成员方法，每次业务逻辑处理完之后用self调用即可。
+方法需要传入三个参数：
+$code:状态码
+$message :状态码说明
+$data: 返回的数据
+返回json数据格式的方法：
+
+
+            /**
+           * 按json方式输出通信数据
+        * @param integer $code 状态码
+        * @param string $message 提示信息
+        * @param array $data 数据
+        * return string
+        */
+          public static function json($code, $message = '', $data = array()) 
+             {
+          //判断状态码是否合法
+          if(!is_numeric($code)) {
+            return '';
+          }
+                      //将参数拼成数据
+          $result = array(
+            'code' => $code,
+            'message' => $message,
+            'data' => $data
+          );
+                      //将数组转换成json格式返回
+          echo json_encode($result);
+        }
+        
+        
+返回xml数据格式的方法
+              /**
+                * 按xml方式输出通信数据
+                * @param integer $code 状态码
+                * @param string $message 提示信息
+                * @param array $data 数据
+                * return string
+                */
+                public static function xmlEncode($code, $message, $data = array()) {
+                              //判断状态吗是否合法
+                  if(!is_numeric($code)) {
+                    return '';
+                  }
+                              //将参数拼成数组
+                  $result = array(
+                    'code' => $code,
+                    'message' => $message,
+                    'data' => $data,
+                  );
+                              //拼接xml
+                  header("Content-Type:text/xml");
+                  $xml = "\n";
+                  $xml .= "\n";
+
+                  $xml .= self::xmlToEncode($result);
+
+                  $xml .= "";
+                  echo $xml;
+                }
+
+              public static function xmlToEncode($data) {
+
+                $xml = $attr = "";
+                foreach($data as $key => $value) {
+                  if(is_numeric($key)) {
+                    $attr = " id='{$key}'";
+                    $key = "item";
+                  }
+                  $xml .= "<{$key}{$attr}>";
+                  $xml .= is_array($value) ? self::xmlToEncode($value) : $value;
+                  $xml .= "\n";
+                }
+                return $xml;
+              }
