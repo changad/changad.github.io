@@ -7,27 +7,30 @@ categories: xiaochang update
 配置文件
 
 /* 支付宝支付设置 */
-return [
-		'APPID'              => 'wx07309f6cf1ba4633', // 微信支付APPID
-        'MCHID'              => '1259416801', //商户号
-        'KEY'                => 'dhyu87i3k5l6kj1hnm08jhyte89h4123', // 微信支付KEY
-        'APPSECRET'          => '1b7dc22d850b9b9669d0dc5ffe697a93',  //公众帐号secert
-        'NOTIFY_URL'         => $_SERVER['HTTP_HOST']."/w_return_url", // 课程支付接收支付状态的连接
 
-];
+	return [
+			'APPID'              => 'wx07309f6cf1ba4633', // 微信支付APPID
+		'MCHID'              => '1259416801', //商户号
+		'KEY'                => 'dhyu87i3k5l6kj1hnm08jhyte89h4123', // 微信支付KEY
+		'APPSECRET'          => '1b7dc22d850b9b9669d0dc5ffe697a93',  //公众帐号secert
+		'NOTIFY_URL'         => $_SERVER['HTTP_HOST']."/w_return_url", // 课程支付接收支付状态的连接
+
+	];
+
 封装的微信支付类
 
-  $parame['name'],// 商品描述
-            'total_fee'     =>  $parame['total'] * 100,// 订单金额  以(分)为单位
-            //'total_fee'     =>  1,
-            'out_trade_no'  =>  $parame['order_num'],// 订单号
-            'product_id'    =>  $parame['id'],// 商品id
-            'trade_type'    =>  'NATIVE',// 原生扫码支付
-        );
-        // 统一下单 获取prepay_id
-        $unified_order=self::unifiedOrder($order,$config);  
-        return $unified_order;  
-    }
+
+  	$parame['name'],// 商品描述
+		    'total_fee'     =>  $parame['total'] * 100,// 订单金额  以(分)为单位
+		    //'total_fee'     =>  1,
+		    'out_trade_no'  =>  $parame['order_num'],// 订单号
+		    'product_id'    =>  $parame['id'],// 商品id
+		    'trade_type'    =>  'NATIVE',// 原生扫码支付
+		);
+		// 统一下单 获取prepay_id
+		$unified_order=self::unifiedOrder($order,$config);  
+		return $unified_order;  
+   	 }
 
 
     /**
@@ -35,6 +38,7 @@ return [
      * 所用到的请求参数
      * @return array jssdk需要用到的数据
      */
+     
     public static function getParameters_js($parame,$openid,$config)
     {
         //
@@ -71,6 +75,7 @@ return [
      * 统一下单
      * @param  array $order 订单 必须包含支付所需要的参数 body(产品描述)、total_fee(订单金额)、out_trade_no(订单号)、product_id(产品id)、trade_type(类型：JSAPI，NATIVE，APP)
      */
+     
     public static function unifiedOrder($order,$weixinpay_config)
     {
         //
@@ -107,10 +112,13 @@ return [
         return  $result;
 
     }
-    /**
+    
+   /**
      * 生成签名
      * @return 签名，本函数不覆盖sign成员变量，如要设置签名需要调用SetSign方法赋值
      */
+     
+     
     public static function makeSign($data,$key)
     {
         // 去空
@@ -126,11 +134,13 @@ return [
         return $result;
     }
 
-    /**
+   /**
      * 将xml转为array
      * @param  string $xml xml字符串
      * @return array       转换得到的数组
      */
+     
+     
     public static function toArray($xml){   
         //禁止引用外部xml实体
         libxml_disable_entity_loader(true);
@@ -138,12 +148,13 @@ return [
         return $result;
     }
 
-    /**
+   /**
      * 
      * 产生随机字符串，不长于32位
      * @param int $length
      * @return 产生的随机字符串
      */
+     
     public static function getNonceStr($length = 32) 
     {
         $chars = "abcdefghijklmnopqrstuvwxyz0123456789";  
@@ -154,10 +165,11 @@ return [
         return $str;
     }
 
-    /**
+   /**
      * 输出xml字符
      * @throws WxPayException
     **/
+   
     public static function toXml($data){
         if(!is_array($data) || count($data) <= 0){
             throw new WxPayException("数组数据异常！");
