@@ -1,0 +1,86 @@
+---
+layout: post
+title:  "tp5整合七牛云直播生成推流拉流连接"
+date:   2017-01-09 14:47:13 +0000
+categories: xiaochang update
+---
+
+
+首先在七牛云官网申请开通直播空间，添加个人资料。
+在模块目录下config.php配置文件中配置直播常量
+
+            return [
+                 'AK' => 'xxx',
+                 'SK' => 'xxx',
+            ];
+控制器里的方法业务代码如下
+
+          /*
+              **创建直播流
+              **/
+              public function videoLiveAdd()
+              {  
+                  //引入七牛云SDK 
+                  vendor('pili-sdk-php#v2-master.lib.Pili_v2');
+                  $ak = Config('AK');
+                  $sk = Config('SK');
+                  //直播名
+                  $hubName = "yudong";
+                      //创建hub
+                      // echo "================Create hub\n";
+                      //实例化类
+                      $mac = new \Qiniu\Pili\Mac($ak, $sk);
+                      $client = new \Qiniu\Pili\Client($mac);
+
+                      $hub = $client->hub($hubName);
+                      //获取stream
+                      // echo "================Get stream\n";
+                      $streamKey = "php-sdk-test" . time();
+                      $stream = $hub->stream($streamKey);
+                      try {
+                          //创建stream
+                          // echo "================Create stream\n";
+                          $resp = $hub->create($streamKey);
+                          // print_r($resp);
+                          // //获取stream info
+                          // echo "================Get stream info\n";
+                          $resp = $stream->info();
+                          // print_r($resp);
+                          // //列出所有流
+                          // echo "================List streams\n";
+                          $resp = $hub->listStreams("php-sdk-test", 1, "");
+                          // print_r($resp);
+                          // //列出正在直播的流
+                          // echo "================List live streams\n";
+                          $liveing = $hub->listLiveStreams("php-sdk-test", 1, "");
+                          // print_r($liveing);
+                      } catch (\Exception $e) {
+                          // echo "Error:", $e, "\n";
+                      }
+                      try {
+                          // echo "================Get liveStatus:\n";
+                          $status = $stream->liveStatus();
+                          // print_r($status);
+                      } catch (\Exception $e) {
+                          // echo "Error:", $e, "\n";
+                      }
+                      //RTMP    推流地址、直播名称、$streamKey、直播时间、AK、SK
+                      $push = \Qiniu\Pili\RTMPPublishURL("pili-publish.www.xxx.com", $hubName, $streamKey, 3600, $ak, $sk); 
+                      // RTMP 直播放址
+                      $pull = \Qiniu\Pili\RTMPPlayURL("pili-live-rtmp.www.xxx.com", $hubName, $streamKey);
+                      // HLS 直播地址
+                      $hls = \Qiniu\Pili\HLSPlayURL("pili-live-hls.www.xxx.com", $hubName, $streamKey);
+                      //HDL 直播地址
+                      $hdl = \Qiniu\Pili\HDLPlayURL("pili-live-hdl.www.zxxx.com", $hubName, $streamKey);
+                      //截图直播地址
+                      $icon = \Qiniu\Pili\SnapshotPlayURL("pili-live-snapshot.www.xxx.com", $hubName, $streamKey);
+                      $this->assign('push',$push);
+                      $this->assign('pull',$pull);
+                      $this->assign('hls',$hls);
+                      $this->assign('hdl',$hdl);
+                      $this->assign('icon',$icon);
+                      return $this->fetch();   
+              }
+
+
+在此感谢李华威同学的技术支持！！！
