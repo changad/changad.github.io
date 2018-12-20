@@ -1,0 +1,37 @@
+---
+layout: post
+title:  "tp3.2中文乱码解决方案"
+date:   2017-03-06 14:47:13 +0000
+categories: xiaochang update
+---
+
+
+一个乱码，搞了两天，真心累。来说说解决的方法，让大伙少采坑。
+数据库读取数据乱码，先检查是不是数据库字符集出了问题:
+输入一下命令，查看数据库字符集
+          show variables like 'char%'
+得到结果：
+
+          | character_set_client     | utf8                                      |
+          | character_set_connection | utf8                                      |
+          | character_set_database   | utf8                                      |
+          | character_set_filesystem | binary                                    |
+          | character_set_results    | utf8                                      |
+          | character_set_server     | utf8                                      |
+          | character_set_system     | utf8                                      |
+          | character_sets_dir       | /www/wdlinux/mysql-5.5.27/share/charsets/
+如果不是utf8
+        linux系统 进入/etc/my.cnf ,添加如下：
+
+            [client]
+             default-character-set=utf8 
+            [mysqld]
+            character_set_server=utf8
+            collation-server=utf8_general_ci 
+
+最后重启mysql
+
+如果还是不行的话可能是框架字符集的问题
+在Library\Think\Db\Driver.class.php 103行后加上
+
+          $this->linkID[$linkNum] ->query("set names utf8");
