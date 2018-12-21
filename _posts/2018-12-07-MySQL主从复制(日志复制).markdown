@@ -1,0 +1,64 @@
+---
+layout: post
+title:  "MySQL主从复制(日志复制)"
+date:   2018-12-07 13:11:13 +0000
+categories: xiaochang update
+---
+
+流程
+1、主数据库将变更操作写入二进制日志中
+2、从数据库读取主数据库的二进制日志变更并写入从relay_Log中
+   需要在从服务器中启动一个IO线程，与主库建立链接，从  主库上启动转储线程读取日志中的事件
+3、在从库上重放relay_log中的日志。
+
+
+配置mysql复制
+1、在主库服务器上建立复制账号
+
+         CREATE USER 'repl'@'IP段' identified by 'PassWord';
+2、授权
+
+        GRANT REPLICATION SLAVE ON *.* TO  'repl'@'IP段'；
+        
+3、配置主库服务器
+
+        bin_log = /home/mysql/sql_log/mysql-bin   启动二进制日志  
+        server_id = 100      几个服务器唯一的，建议用ip段后几位
+        
+4、配置从服务器
+
+        bin_log = /home/mysql/sql_log/mysql-bin   启动二进制日志  
+        server_id = 101      几个服务器唯一的，建议用ip段后几位
+        relay_log = mysql-relay-bin   终极日志的名字   
+        log_slave_update = on [可选]    后期用于从服务器当做其他服务器主服务器 
+        read_only = on [可选]      
+
+5、主库备份到从库 两种方式
+
+        mysqldump --single-transaction --master-data --triggers --routimes --all-datebases -uroot -p >> abc.sql 
+ 
+          xtrabackup --slave-info -u root -p >> abc.sql
+  
+  传输到从服务器
+  
+        scp abc.sql root@192.168.0.1:/root
+
+  在从服务器上把abc.sql文件导入
+  
+      mysql -uroot -p < abc.sql
+
+
+6、启动复制连路
+   在从服务器上操作
+   
+          CHANGE  MASTER TO MASTER_HOST = '主服务ip',
+                  MASTER_USER = 'repl'  主服务的账号,
+   　            MASTER_PASSWORD = 'pwd' 密码,
+                MASTER_LOG_FILE = 'mysql_log_file_name', //日志的名字
+                MASTER_LOG_POS = 4；  //日志的偏移量
+    最后两个配置在主服务器中的abc.sql中获取
+
+7、在从服务器上启动
+
+            start slave
+    
