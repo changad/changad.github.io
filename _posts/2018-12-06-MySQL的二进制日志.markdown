@@ -1,0 +1,33 @@
+---
+layout: post
+title:  "MySQL的二进制日志"
+date:   2018-12-06 11:11:13 +0000
+categories: xiaochang update
+---
+
+这段时间一直在学习 MySQL 的主从复制，读写分离；要想了解主从复制，还得先从它的二进制日志说起，
+  
+mysql 日志分为 ROW (行日志) 和 STATEMENT(段日志) 、 MIXED(混合日志) 三种
+默认为ROW格式，一般选择也是row最好，
+
+查看二进制日志格式    
+  
+        show variables like 'binlog_format'
+        
+修改二进制日志格式
+
+        set session binlog_format= statement
+        
+查看日志
+
+        mysqlbinlog 日志文件名       statement格式
+	      mysqlbinlog 日志文件名 -vv   row格式
+        
+查看配置项 binlog_row image  （记录日志的格式）
+       show variables like 'binlog_row_image'
+   
+格式分为full、minimal、noblob三种
+
+       binlog_row_image = full   /   minimal   /  noblob
+     
+日志记录量较大  尽量设置成minimal
