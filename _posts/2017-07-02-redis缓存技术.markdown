@@ -157,6 +157,26 @@ redis的一个类库
                {
                  return self::$handler->Lindex($key,0);
                }
+               
+                /**
+                  * 哈希插入
+                  * @param string $table  表名
+                  * @param string  $key   键
+                  * @param string  $val   键值
+                  */
+                           public static function HSET($table,$key,$val)
+                 {
+                    return self::$handler->HSET($table,$key,$val);
+                 }
+                 /**
+                  * 读取哈希某个字段
+                  * @param string $table  表名
+                  * @param string  $key   键
+                  */
+                 public static function HGET($table,$key)
+                 {
+                   return self::$handler->HGET($table,$key);
+                 }
             }
             
             
