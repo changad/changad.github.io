@@ -1,0 +1,46 @@
+---
+layout: post
+title:  "redis 哈希数据库"
+date:  2018-12-26 17:05:13 +0000
+categories: xiaochang update
+---
+
+这段时间公司要让在程序上发7000万个码，奈何数据库插入操作太慢，改用redis作为数据库
+
+想把redis作为数据库，首先要修改其配置让其永久性存储
+
+配置文件路径
+
+         usr/redis/redis.conf
+ 记录磁盘配配置处理：
+ 
+      appendonly： yes     默认情况下AOF功能是关闭的，将该选项改为yes以便打开Redis的AOF功能。
+      appendfsync: everysec     设置三个值，分别是：
+      always 每次对redis的操作都会记录，效率最低
+      everysec 每秒对redis的操作记录到磁盘
+      no 大约每30秒对redis的操作记录到磁盘
+      
+ 配置处理：
+ 
+      # 周期性执行条件的设置格式为
+      save <seconds> <changes>
+      # 默认的设置为：
+      save 900 1
+      save 300 10
+      save 60 10000  
+以上分别表示更改了1个key时间隔900s进行持久化存储；更改了10个key300s进行存储；更改10000个key60s进行存储。
+
+存入
+      //参数一：表名
+      //参数二：键
+      //参数三：值
+      $redis->HSET('qrcode',$qrcodeStr,$dataStr);
+      
+读取
+      //参数一：表名
+      //参数二：键
+      $redis->HGET('qrcode',$str);
+      
+更多操作请查阅redis官网
+      
+ 
