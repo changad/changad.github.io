@@ -16,7 +16,6 @@ categories: xiaochang update
         {
           // $txtName = $this->file_path.$this->time.'/'.$this->time.'102.txt';
 
-          // var_dump(strlen(file_get_contents($txtName)));die;
 
           $file = $this->file_path.$this->time.'.txt';  //带绝对路径的文件名
 
@@ -43,7 +42,7 @@ categories: xiaochang update
             }
             $code++;
           }
-          return 1;
+            echo '写入成功';die;
         }
         
         
