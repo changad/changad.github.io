@@ -4,5 +4,75 @@ title:  "高性能配置文件服务 Yaconf"
 date:   2019-05-06 15:05:13 +0000
 categories: xiaochang create
 ---
+    
+Yaconf  一个高性能的配置管理扩展，单独的配置目录，不和代码一起，在php启动的时候处理所有要处理的配置。一般项目中可能要用到十几甚至几十个配置文件，各种array的解析消耗着性能。
 
-xxxx
+
+1、window下安装Yaconf
+
+下载扩展
+  http://pecl.php.net/package/yaconf/1.0.7/windows
+  
+复制 解压后的 php_yaconf.dll 文件到 D:\wamp64\www\php\php-7.2.14\ext 目录
+
+php.ini  中 加入  
+
+             extension=php_yaconf.dll
+
+以及php.ini 末尾加上：
+
+             [yaconf]
+             yaconf.directory="/www/wwwroot/yaconf"
+             yaconf.check_delay=60   
+             
+yaconf.directory 是 你 配置文件夹的位置；yaconf.check_delay 是 配置文件的更新时间
+
+
+        
+
+2、linux下安装Yaconf
+   
+     wget http://pecl.php.net/get/yaconf-1.0.2.tgz // 下载 yaconf 扩展
+
+     tar zxvf yaconf-1.0.2.tgz // 解压
+ 
+     cd yaconf-1.0.2
+
+     phpize // 安装 yaconf
+
+    ./configure --with-php-config=/usr/local/php-7.2/bin/php-config
+
+    make && sudo make install
+ 
+  php.ini文件中加入这三行
+
+     extension=yaconf.so
+
+     yaconf.directory="/usr/local/yaconf" // yaconf 的配置目录位置，待会创建目录
+
+     yaconf.check_deley=0 // 配置更新时间
+     
+     
+3、用法
+
+   在 yaconf 目录下新建一个文件 , 例如 abc.ini(必须以 .ini 后缀结尾)
+文件内容如下：
+
+           a = '111'
+           
+php中读取： 
+
+        $a = /Yaconf::get('abc.a');
+        
+     
+ 
+ 
+        
+       
+
+
+
+
+  
+ 
+    
