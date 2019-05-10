@@ -282,6 +282,27 @@ tp5使用elasticsearch的方法
 
 
         }
+	
+	
+	/**
+	 * 批量插入
+	 * @param  [array] $params []
+	 * @return [type]         [description]
+	 */
+	public function bulk($params)
+	{
+		//
+		if(empty($params) || !is_array($params)){
+			return false;
+		}
+		//
+		try{
+			$result = self::$esClient->bulk($params);
+		}catch(\Exception $e){
+			throw new \Exception('Elasticsearch	服务异常');
+		}
+		return $result;
+	}
         
         
 5、使用
@@ -314,8 +335,20 @@ tp5使用elasticsearch的方法
 删除文档
 
     Es::getInstance()->deleteDoc($index,$type,$id);
-      
- 
+    
+    
+批量添加
+
+    $params['index'] = 'qrcode_code'; #索引
+    $params['type'] = '_doc';  #类型
+    $params['body'][]=array(
+	   'create' => array(    #注意create也可换成index
+		'_id'=>$id   #自定义id
+	   ),
+    );
+    $params['body'][] = $array
+    
+    Es::getInstance()->bulk($params);
     
       
 
