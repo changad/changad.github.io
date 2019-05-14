@@ -40,9 +40,9 @@ categories: xiaochang update
    使用swoole的毫秒定时任务swoole_time_tick
    
           //swoole 每2秒执行一次
-        // swoole_timer_tick(2000, function($timer_id){
-        // 	 (new Memory())->mem();
-        // });
+         swoole_timer_tick(2000, function($timer_id){
+         	 (new Memory())->mem();
+         });
         
    
      
