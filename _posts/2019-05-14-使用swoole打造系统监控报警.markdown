@@ -1,0 +1,48 @@
+---
+layout: post
+title:  "使用swoole打造系统监控报警"
+date:   2019-05-14 14:11:13 +0000
+categories: xiaochang update
+---
+
+
+   之前项目总在运行过程中突然报错，仔细检查原来是内存满了，后来每隔一段时间时间就要查看一下内存的使用情况，后来接触了swoole之后，使用swoole的毫秒定时任务
+写了一个php脚本，用来监控内存使用情况，第一时间通过短信或者邮件的方式通知技术。
+
+直接上代码
+
+        /**
+         * 监控服务器的内存是否满了
+         */
+        class Memory
+        {
+
+          public function mem()
+          {
+            //shell命令
+            $shell = 'df -lh | grep -E "^(/)"'; 
+            //执行shell命令
+            $result = shell_exec($shell);      ///dev/vda1 40G 11G 28G 28% /
+            //用空格分隔字符串
+            //过滤掉空值
+            //将下标从0开始排序
+            $arr = array_values(array_filter(explode(" ",$result)));
+            //获取内存使用率
+            $usage =trim($arr[4],'%'); 
+            if($usage  > \Yaconf::get('memory.per')){  //在yaconf里设置的是85%的报警值
+                //报警处理  发送短息或者邮件
+            }
+
+          }
+        }
+        
+        
+   使用swoole的毫秒定时任务swoole_time_tick
+   
+          //swoole 每2秒执行一次
+        // swoole_timer_tick(2000, function($timer_id){
+        // 	 (new Memory())->mem();
+        // });
+        
+   
+     
