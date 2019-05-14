@@ -38,11 +38,13 @@ yaconf.directory 是 你 配置文件夹的位置；yaconf.check_delay 是 配�
  
      cd yaconf-1.0.2
 
-     phpize // 安装 yaconf
+     /www/server/php/72/bin/phpize    // 安装 yaconf
 
-    ./configure --with-php-config=/usr/local/php-7.2/bin/php-config
+    ./configure --with-php-config=/www/server/php/72/bin/php-config
 
-    make && sudo make install
+    make -j
+    
+    sudo make install
  
   php.ini文件中加入这三行
 
