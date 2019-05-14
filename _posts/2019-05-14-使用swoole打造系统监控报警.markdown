@@ -44,5 +44,11 @@ categories: xiaochang update
          	 (new Memory())->mem();
          });
         
+        
+ 开启进程
+     
+     nohup php Memory &
+     
+     nohup命令启动后 即使窗口关闭 依然运行
    
      
