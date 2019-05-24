@@ -1,0 +1,39 @@
+---
+layout: post
+title:  "nginx 均衡负载"
+date:   2019-05-24 16:49:13 +0000
+categories: xiaochang update
+---
+
+均衡负载的配置
+ 
+ 第一种通过权重比  weight值越大权重就越大
+ 
+      upstream swoole_http {
+        server  127.0.0.1 80 weight=2;
+        server  127.0.0.2 80 weight=1;
+      }
+      
+      
+通过hash方法   一个ip访问到一个服务器  以后都会走这个服务器 
+
+    upstream swoole_http {
+        ip_hash;
+      server  127.0.0.1 80;
+      server  127.0.0.2 80;
+    }
+    
+    
+反向代理配置
+
+      location / {
+
+        root  /www/wwwroot/tp5/public/   #项目目录
+        index  index.html index.htm;
+
+        if(!-e $request_filename){
+
+          #反向代理的地址
+          proxy_pass http://swoole_http;
+        }       
+      }
