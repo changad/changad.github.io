@@ -30,6 +30,7 @@ categories: xiaochang update
         }
         
 用tcp链接传输数据
+
       $cli = new \swoole_client(SWOOLE_TCP);
       //创建链接
       $cli->connect('127.0.0.1', 9502); 
