@@ -33,6 +33,7 @@ windows安装配置
     GOPATH = D:\goProjet 存放项目的路径
 
 go的目录结构
+
     goProject
         --src  //项目源文件
         --pkg  //存放编译后的包文件
