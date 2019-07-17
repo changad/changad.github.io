@@ -54,7 +54,7 @@ categories: xiaochang create
         
       func main(){
         p := Person{name: "Robert", age:24, sex: "男"}
-	      fmt.Println(p)
+	 fmt.Println(p)
       }
       
 方法
@@ -66,7 +66,11 @@ categories: xiaochang create
     }
      
      调用
+     p := Person{name: "Robert", age:24, sex: "男"}
      p.des()
    
         
-    
+	
+----------------------------------     接口     ----------------------------------------
+
+
