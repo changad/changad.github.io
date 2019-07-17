@@ -38,6 +38,7 @@ mport特殊用法
 
 
 2）下划线（_）
+
      import(
        _ 'bbb
     )
