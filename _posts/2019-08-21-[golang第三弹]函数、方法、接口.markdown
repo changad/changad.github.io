@@ -9,25 +9,64 @@ categories: xiaochang create
 
 形式1
 
-  func 函数名(参数1 类型， 参数2 类型 ....)(结果 类型){
+
+    func 函数名(参数1 类型， 参数2 类型 ....)(结果 类型){
       
-  }
-  实例  
-  func add(a int, b int)(result int){
-        result = a + b
-        return    /*直接return即可 return后面可带返回的参数也可不带*/
-  }
+    }
+   实例  
+   
+    func add(a int, b int)(result int){
+          result = a + b
+          return    /*直接return即可 return后面可带返回的参数也可不带*/
+    }
+
 
 形式2
 
-  func 函数名(参数1 类型， 参数2 类型 ....)(类型){
+    func 函数名(参数1 类型， 参数2 类型 ....)(类型){
       
-  }
+    }
   实例  
-  func add(a int, b int)(int){
-        result := a + b
-        return  result
-  }
+  
+    func add(a int, b int)(int){
+          result := a + b
+          return  result
+    }
   
   ----------------------------------     方法     ----------------------------------------
   
+  结构体
+  
+   结构体比函数更灵活，可以封装属性和操作。  
+  形式
+     
+        type 名称 struct{
+              属性名   类型
+        }
+       
+   实例
+   
+        type Person struct{
+          name string
+          age int
+          sex string
+        }
+        
+      func main(){
+        p := Person{name: "Robert", age:24, sex: "男"}
+	      fmt.Println(p)
+      }
+      
+方法
+  结构体可以拥有若干种方法（匿名结构体是不能拥有方法的）
+  如下des方法则为Person结构体的附属方法
+  
+    func(per Person)des(){
+      fmt.Println(per.age)
+    }
+     
+     调用
+     p.des()
+   
+        
+    
