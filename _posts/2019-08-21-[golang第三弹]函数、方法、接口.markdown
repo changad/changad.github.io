@@ -73,4 +73,48 @@ categories: xiaochang create
 	
 ----------------------------------     接口     ----------------------------------------
 
+把所有的具有共性的方法定义在一起，任何其他类型只要实现了这些方法就是实现了这个接口
 
+  形式
+
+	type 接口名称 interface{
+	      方法1
+	      方法2
+	      ....
+	}
+  例子
+  
+	type Persons interface{
+	      getName()
+	      getAge()
+	}
+	
+将定义的方法全部放入接口中，在实例化接口后即可调用接口里的所有方法
+
+  一个简单的接口实例
+  
+  	//定义系统接口
+	type System interface{
+		connect() string
+	}
+
+	//app结构体
+	type App struct{
+		name string
+	}
+	//定义app方法
+	func (app App) connect() string {
+		return app.name
+	}
+
+	func main(){
+		//
+		app := App{ name:"app" }
+
+		var system System
+		system = app
+
+		name := system.connect()
+		fmt.Println(name)
+
+	}
