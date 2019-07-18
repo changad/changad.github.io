@@ -84,9 +84,8 @@ categories: xiaochang create
 	}
   例子
   
-	type Persons interface{
-	      getName()
-	      getAge()
+	type System interface{
+		connect() string
 	}
 	
 将定义的方法全部放入接口中，在实例化接口后即可调用接口里的所有方法
@@ -98,19 +97,19 @@ categories: xiaochang create
 		connect() string
 	}
 
-	//app结构体
+	//结构体
 	type App struct{
 		name string
 	}
-	//定义app方法
+	//定义方法
 	func (app App) connect() string {
 		return app.name
 	}
 
 	func main(){
-		//
+		//设置属性
 		app := App{ name:"app" }
-
+		
 		var system System
 		system = app
 
