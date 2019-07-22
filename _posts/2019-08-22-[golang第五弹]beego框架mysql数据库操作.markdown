@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "[golang第五弹]beego框架mysql数据库操作"
-date:   2019-08-22 10:05:20 +0000
+date:   2019-08-22 14:05:20 +0000
 categories: xiaochang create
 ---
 
@@ -22,12 +22,17 @@ categories: xiaochang create
 
    		  orm.RegisterDataBase("default", "mysql", "test:123456@/test?charset=utf8",30,30)
 
-  参数1：是数据库的别名，用来切换数据库使用。
-	参数2：数据库类型
-	参数3：数据库连接字符串:test:123456@test?charset=utf8相对于用户名:密码@数据库地址+名称?字符集
-	参数4：数据库的最大空闲连接   相当于:orm.SetMaxIdleConns("default", 30)
-	参数5：数据库的最大数据库连接   相当于: orm.SetMaxOpenConns("default", 30)
-	参数4,参数5非必填，会使用数据库默认值：
+   参数1：是数据库的别名，用来切换数据库使用。
+   
+   参数2：数据库类型
+   
+   参数3：数据库连接字符串:test:123456@test?charset=utf8相对于用户名:密码@数据库地址+名称?字符集
+   
+   参数4：数据库的最大空闲连接   相当于:orm.SetMaxIdleConns("default", 30)
+   
+   参数5：数据库的最大数据库连接   相当于: orm.SetMaxOpenConns("default", 30)
+   
+   参数4,参数5非必填，会使用数据库默认值：
   
   例子
   
