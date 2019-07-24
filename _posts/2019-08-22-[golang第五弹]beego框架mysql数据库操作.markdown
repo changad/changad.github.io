@@ -37,10 +37,17 @@ categories: xiaochang create
   例子
   
          orm.RegisterDataBase("default","mysql","root:@tcp(127.0.0.1:3306)/imooc?charset=utf8",30,30)
-         
-         该代码放在main.go的入口文件main()函数里的beego Run() 前面
+        
+	
+3、 注册数据库 
+    在入口文件main.go中添加init函数
+    
+    	 func init(){
+	 	orm.RegisterDriver("mysql",orm.DRMySQL)
+		orm.RegisterDataBase("default","mysql","root:@tcp(127.0.0.1:3306)/imooc?charset=utf8",30,30)
+	 }
           
       
-3、 可以使用bee generate命令自动生成curd数据库操作代码
+4、 可以使用bee generate命令自动生成curd数据库操作代码
       
         bee generate scaffold user -fields="id:int64,name:string,gender:int,age:int" -driver=mysql -conn="root:@tcp(127.0.0.1:3306)/imooc
