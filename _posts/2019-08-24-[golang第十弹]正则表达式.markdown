@@ -13,13 +13,13 @@ import(
 
   func Match(pattern string, b[]byte)(matched bool,err error) //返回bool类型
   
-  isok, _ := regexp.Match("[a-zA-z](3)",[]byte("asx1"))
+       isok, _ := regexp.Match("[a-zA-z](3)",[]byte("asx1"))
   
 对字符串匹配
 
   func MatchString(pattern string, s string)(matched bool,err error) //返回bool类型
   
-  isok, _ := regexp.MatchString("[a-zA-z](3)","asx1")
+      isok, _ := regexp.MatchString("[a-zA-z](3)","asx1")
 
 
 func MustCompile(pattern string)*Regexp  //解释规则, 它会解析正则表达式，如果成功返回解释器
