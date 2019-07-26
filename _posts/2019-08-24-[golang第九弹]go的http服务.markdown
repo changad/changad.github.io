@@ -71,9 +71,10 @@ post请求
         }
         fmt.Println(string(body))
         
-        
-http.postForm请求
-
+         
+http.postForm请求    需要引入 "net/url"
+    
+    
         resp, err := http.PostForm("http://www.xxx.com/", url.Values{"appKey": {"62c99290f0cb2c567cb153c1fba75d867e"}})
         
         defer resp.Body.Close()
