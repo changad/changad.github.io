@@ -37,3 +37,56 @@ func (re *Regexp)FindAllStringSubmatch(s string, n int)[]string  //根据规则�
     result1 := reg1.FindAllStringSubmatch(buf, -1)
     fmt.Println("result1 = ", result1)
 
+
+
+
+
+
+结合http的get庆请求和正则表达式 写一个简单的爬虫实例
+
+      package main 
+
+      import (
+        "fmt"
+        "regexp"
+        "net/http"
+        "io/ioutil"
+      )
+
+      func main(){
+        //匹配数组
+        url := "https://movie.douban.com/subject/24751763"
+        resHtml := httpGet(url)
+
+        resu := reg(resHtml)
+        fmt.Println(resu)
+      }
+
+      //正则
+      func reg(strHtml string) (res string) {
+        reg :=regexp.MustCompile(`<span\s*property="v:itemreviewed">(.*)</span>`)
+        result := reg.FindAllStringSubmatch(strHtml, -1)
+
+        for _, v := range result{
+          res = v[1]
+        }
+
+        return;
+      }
+
+      //get
+      func httpGet(url string) string{
+        resp, err := http.Get(url)
+        if err != nil{
+          panic(err)
+        }
+        defer resp.Body.Close()
+
+        body, error := ioutil.ReadAll(resp.Body)
+        if error != nil{
+          panic(error)
+        }
+        return string(body)
+      }
+
+
