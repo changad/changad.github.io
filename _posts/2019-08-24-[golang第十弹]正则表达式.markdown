@@ -1,0 +1,39 @@
+---
+layout: post
+title:  "[golang第十弹]正则表达式"
+date:   2019-08-24 13:07:33 +0000
+categories: xiaochang create
+---
+
+import(
+  "regexp"
+)
+
+对数据匹配
+
+  func Match(pattern string, b[]byte)(matched bool,err error) //返回bool类型
+  
+  isok, _ := regexp.Match("[a-zA-z](3)",[]byte("asx1"))
+  
+对字符串匹配
+
+  func MatchString(pattern string, s string)(matched bool,err error) //返回bool类型
+  
+  isok, _ := regexp.MatchString("[a-zA-z](3)","asx1")
+
+
+func MustCompile(pattern string)*Regexp  //解释规则, 它会解析正则表达式，如果成功返回解释器
+func (re *Regexp)FindAllStringSubmatch(s string, n int)[]string  //根据规则提取关键信
+
+    buf := "abc azc a7c aac 888 a9c  tac"
+    //解析正则表达式，如果成功返回解释器
+    reg1 := regexp.MustCompile(`a[0-9]c`)
+    if reg1 == nil { //解释失败，返回nil
+        fmt.Println("regexp err")
+        return
+    }
+    
+    //根据规则提取关键信息
+    result1 := reg1.FindAllStringSubmatch(buf, -1)
+    fmt.Println("result1 = ", result1)
+
