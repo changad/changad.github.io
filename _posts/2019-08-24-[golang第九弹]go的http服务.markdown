@@ -74,9 +74,10 @@ post请求
          
 http.postForm请求    需要引入 "net/url"
     
-    
-        resp, err := http.PostForm("http://www.xxx.com/", url.Values{"appKey": {"62c99290f0cb2c567cb153c1fba75d867e"}})
+        data := make(url.Values) 
+        data[“name”] = []string{“golang”} 
         
+        resp, err := http.PostForm("http://www.xxx.com/", data)
         defer resp.Body.Close()
         body, err := ioutil.ReadAll(resp.Body)
         if err != nil {
