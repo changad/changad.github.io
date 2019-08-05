@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "[golang第十二弹]httplib使用"
-date:   2019-08-24 15:07:33 +0000
+date:   2019-08-24 19:07:33 +0000
 categories: xiaochang create
 ---
 
@@ -9,11 +9,11 @@ httplib就相当于php curl请求
 
 安装
 
-   go get  github.com/astaxie/beego/httplib
+   	go get  github.com/astaxie/beego/httplib
    
 get请求
 
-  req := httplib.Get("http://www.xxx.com")
+  	req := httplib.Get("http://www.xxx.com")
 	str, err := req.String()
   
   
