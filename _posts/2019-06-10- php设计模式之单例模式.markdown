@@ -1,0 +1,54 @@
+---
+layout: post
+title:  "php设计模式之单例模式"
+date:   2019-06-10 17:05:13 +0000
+categories: xiaochang create
+---
+
+
+单例模式一个类只能有一个实例，且为自行创建的实例，向整个系统提供这个实例
+
+在面向对象开发时，为了避免大量的的new实例操作消耗资源 例如mysql操作，redis操作等
+
+特点:
+  必须私有静态的是有变量 $_instance
+  构造函数和析构函数必须设置为私有，防止外部实例化
+  getInstance()方法必须设置为共有，返回一个实例
+  必须有私有的__clone方法防止克隆对象
+  
+
+实例
+
+    class Demo{
+      
+      //用于保存实例的静态成员变量
+      private static $_instance
+      
+      //构造方法必须是private
+      private function construct(){
+          echo "this is construct"
+      }
+      
+      //单例方法  用于访问实例的公共静态方法
+      public static function getInstance()
+      {
+         //用instanceof来判断是否实例化
+          if(!(self::$_instance instanceof self)){
+                self::$_instance = new self;
+          }
+          
+          return self::$_instance
+      }
+      
+      public function test()
+      {
+          echo  "this is test" 
+      }
+    
+    }
+    
+    
+  调用
+  
+      Demo::getInstance()->test()
+  
