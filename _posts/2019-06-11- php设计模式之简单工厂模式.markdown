@@ -1,0 +1,152 @@
+---
+layout: post
+title:  "php设计模式之简单工厂模式"
+date:   2019-06-11 17:05:13 +0000
+categories: xiaochang create
+---
+
+应用场景：不确定什么操作的时候，最让开发者“头疼的先这样写以后再改，再添加需求”
+          
+         
+简单例子， 假如客户需要购买水果
+
+
+一般的写法
+    <?php
+    
+      class Apple{
+          public function getName()
+          {
+             echo "苹果"
+          } 
+      }
+      
+      class Banana{
+          public function getName()
+          {
+             echo "香蕉"
+          } 
+      }
+      
+      
+      //顾客1
+      $apple1 = (new Apple())->getName()
+      $banana1 = (new Banana())->getName()
+      //顾客2
+      $apple2 = (new Apple())->getName()
+      $banana2 = (new Banana())->getName()
+         
+当有一天不买苹果了，改成买葡萄了，那就要去程序吧找出每一个new的地方该成grape(葡萄)
+
+
+此时可以使用简单的工厂模式
+
+      <?php
+      
+        class Apple{
+            function getName(){
+                echo "苹果"
+            }
+        }
+        
+        
+        class Banana{
+            functino getName（）
+            {
+                echo  "香蕉"  
+            }
+        }
+        
+        
+        class Client{
+            function getFruitsName($fruitsName){
+                swith ($fruitsName){
+                      case 'apple':
+                          return new Apple();
+                       break;
+                      case "Banana":
+                          return new Banana();
+                       break;
+                }
+            }
+        }
+        
+        $client = new Client();
+        //客户1
+        $apple1 = $client->getFruitsName("apple")->getName();
+        $banana1 = $client->getFruitsName("banana")->getName();
+        //客户2
+        $apple2 = $client->getFruitsName("apple")->getName();
+        $banana2 = $client->getFruitsName("banana")->getName();
+        
+ 这时需要吧阿苹果改成葡萄时，只需要把Client类里的new Apple改一下就行,
+ 
+ 简单的工厂模式，用户在使用的时候直接去工厂类里拿到自己所需要的实例，但是，这时候新的问题又出现了，如果需要添加新品水果，就需要在工厂类里不断的添加判断，这
+ 就违背了面向对象的设计原则，对外开放，对内更改关闭的原则。工厂模式解决了这一问题
+ 
+      <?php
+      
+          interface Fruits{
+              function getName()
+          }
+    
+          class Apple implements Fruits{
+                function getName()
+                {
+                    echo "apple"
+                }
+          }
+          
+          class Banana impements Fruits{
+                function getName()
+                {
+                    echo "banana"
+                }
+          }
+          
+          interface Fruitsof{
+              function makeFruits();
+          }
+          
+          class Appleof implements Fruitsof{
+              function makeFruits(){
+                  return new Apple();
+              }
+          }
+          
+          class Bananaof implements Fruitsof{
+              function makeFruits(){
+                  return new Banana();
+              }
+          }
+          
+          
+          //顾客1
+          $apple1 = (new Appleof())->makeFruits();
+          $apple1->getName()
+          
+          //顾客2
+          $apple2 = (new Appleof())->makeFruits();
+          $apple2->getName()
+          
+          
+现在如果需要增加橘子，就不需要改变原有的代码  只需要添加产品 工厂即可
+
+          class Orange implements  Fruits{
+                function getName()
+                {
+                   echo "橘子"
+                }
+          }
+          
+          class Orange implements  Fruitsof{
+                function makeFruits()
+                {
+                    return new Orange();
+                }
+                
+          }
+
+           
+  
+  
