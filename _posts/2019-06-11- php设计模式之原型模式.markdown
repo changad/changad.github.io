@@ -1,0 +1,92 @@
+---
+layout: post
+title:  "php设计模式之原型模式"
+date:   2019-06-11 17:05:13 +0000
+categories: xiaochang create
+---
+
+
+原型模式主要用于创建重复的对象     使用clone克隆减少实例化     
+
+如果场景中需要多次实例化     可以使用原型模式
+
+造个车
+
+        class Car{
+              //车名
+              public $name
+              //设置车名
+              public function setName($name)
+              {
+                   $this->name = $name
+              }
+        }
+    
+
+驾驶汽车
+
+       class DoCar{
+               private $car;
+               //
+               public function __construct()
+               {
+                   echo "开始"
+               }
+
+               //选择要开的车
+               public  function setCar($car)
+               {
+                    $this->car = $car;
+               }
+
+               public function show()
+               {
+                    echo "开始驾驶".$this->car->name; 
+               }
+        }
+      
+浅复制
+
+        $car = new Car();
+        $car->name = "宝马";
+        $doCar = new DoCar();
+        $doCar->setCar($car);
+        $doCar->show();
+        
+        $cloneCar = clone $doCar;
+        $cloneCar->show();
+        
+
+注意clone是浅复制，一旦$car->name改变成了  $cloneCar也会跟着改变
+
+
+__clone 的作用是当对 对象进行复制时自动加载
+
+这时候我们就需要__clone魔术方法来进行深复制，只需要在DoCar类中加上__clone即可
+
+         class DoCar{
+               private $car;
+               //
+               public function __construct()
+               {
+                   echo "开始"
+               }
+
+               //选择要开的车
+               public  function setCar($car)
+               {
+                    $this->car = $car;
+               }
+
+               public function show()
+               {
+                    echo "开始驾驶".$this->car->name; 
+               }
+               
+               public function __clone()
+               {
+                  $this->car = clone $this->car
+               }
+        }
+
+
