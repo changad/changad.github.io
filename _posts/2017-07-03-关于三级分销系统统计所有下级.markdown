@@ -1,0 +1,67 @@
+---
+layout: post
+title:  "关于三级分销系统统计所有下级"
+date:   2018-07-03 14:47:13 +0000
+categories: xiaochang update
+---
+
+在做三级分销时经常会统计团队人数，获取下级人数等操作
+
+
+            public function lists()
+              {
+                $this->get_xiaji_num($uid);
+              }
+
+              /**
+                 * 
+                 * 获取所有下级级别人数
+                 */
+                private function get_xiaji_num($uid)
+                {
+                    
+                  $xiaji_id = $this->xiaji($uid);
+                    if($xiaji_id){
+                  //获取所有下级id集合
+                      $xiaji_ids = $this -> get_xiajis($xiaji_id,$xiaji_id);
+                      //
+                      $where['uid'] = array('in',$xiaji_ids);
+                      $lists = M('user')->where($where)->select();
+                }else{
+                    $lists = '';
+                }
+                    return $lists;
+                }
+
+
+                //获取所有下线id总和
+                private function get_xiajis($arrId,$arrayId)
+                {
+                  //获取所有下级id
+                    $arr = array();
+                    foreach($arrId as $k => $v){
+                        $res = $this->xiaji($v);
+                        //dump($res);
+                        foreach($res as $key => $val){
+                            $arrayId[] = $val;
+                            $arr[] = $val;
+                        }
+                    }
+                    if($arr){
+                        return  $this->get_xiajis($arr,$arrayId);
+                    }else{
+                        return $arrayId;
+                    }
+                }
+
+
+                //获取当前用户的下级
+                public function xiaji($id)
+                {
+                    $arr = array();
+                    $res =  M('user') -> where(array('pid' => $id)) -> field('id') -> select();
+                    foreach($res as $key => $val){
+                        $arr[] = $val['id'];
+                    }
+                    return $arr;
+                }
