@@ -1,0 +1,85 @@
+---
+layout: post
+title:  "php设计模式之类适配器"
+date:   2019-06-12 17:05:13 +0000
+categories: xiaochang create
+---
+
+使用场景：解决兼容性问题，能够将截然不同的函数接口封装成统一的Api
+
+需要定义一个接口：规定方法与参数
+    有几个要实现的类，继承接口
+    
+比如框架里经常使用的数据库操作可以操作多种数据库，同可以统一调用一个接口即可
+
+就拿mysqli与pdo操作说明
+
+创建一个接口
+
+        interface Database{
+            function   connect($host,$user,$password,$dbname)
+            function   query($sql)
+            function   close()
+        }
+
+Mysqli封装
+
+        class Mysql implements Database
+        {
+                protected $conn;
+
+                function connect($host, $user, $passwd, $dbname)
+                {
+                    $conn = mysqli_connect($host, $user, $passwd, $dbname);
+                    $this->conn = $conn;
+                }
+
+                function query($sql)
+                {
+                    return mysqli_query($this->conn, $sql);
+                }
+
+                function close()
+                {
+                    mysqli_close($this->conn);
+                }
+        }
+        
+   
+PDO封装
+
+        class PDO implements Database
+        {
+                  protected $conn;
+                   
+                  function connect($host, $user, $passwd, $dbname)
+                  {
+                      $conn = new \PDO("mysql:host=$host;dbname=$dbname", $user, $passwd);
+                      $this->conn = $conn;
+                  }
+
+                  function query($sql)
+                  {
+                      return $this->conn->query($sql);
+                  }
+
+                  function close()
+                  {
+                      unset($this->conn);
+                  }
+   
+        }
+        
+统一接口调用
+
+      $db = MySQLi ();
+      $db->connect('127.0.0.1', 'root', 'root', 'test');
+      $db->query('show databases');
+      $db->close();
+      
+      
+       $db = new PDO();
+       $db->connect('127.0.0.1', 'root', 'root', 'test');
+       $db->query('show databases');
+       $db->close();
+      
