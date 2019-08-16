@@ -1,0 +1,32 @@
+---
+layout: post
+title:  "MySQL性能优化之文件系统参数优化"
+date:   2018-06-04 11:11:13 +0000
+categories: xiaochang update
+---
+
+就拿linux系统来说
+
+linux系统文件系统有EXT4、EXT3、XFS三种格式       //XFS格式要比上俩者性能高  建议使用
+
+
+
+果使用EXT3\EXT4需要注意以上几点
+
+EXT3/4系统的挂载参数（etc/fstab）
+
+data参数
+data = writeback |  ordered  |  journal      三个可选择值  代表三种不同的日志策略，
+
+writeback  源数据写入到日志源数据写入和数据写入不是同步的，这是最快的一种配置，对于innodb是最好的选择
+
+ordered   只会记录源数据，宝提供了一致性的保证，在写源数据之前先写数据，比上者稍微慢一些  但出现崩溃更加安全一些  通俗来说是先写入磁盘，再做元数据的日志
+
+journal   在数据写会先写入到日志中，然后再写入磁盘。 是三种模式最低的一种。
+
+
+
+noatime,nodiratime参数   
+默认的方式下linux会把文件访问的时间做记录，当大量访问文件时，减少这些动作能够提高性能，这两个参数用于禁止记录日志的访问时间，减少一些写的操作，系统在读取文件目录时不必进行写操作来
+
+总结：尽可能使用XFS格式文件，如果使用EXT3\EXT4，最优的解决方案  data = writeback      noatime,nodiratime
