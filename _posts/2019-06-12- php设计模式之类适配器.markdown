@@ -82,4 +82,54 @@ PDO封装
        $db->connect('127.0.0.1', 'root', 'root', 'test');
        $db->query('show databases');
        $db->close();
+       
+       
+  
+还有一种情况:老代码接口不适合新的接口需求，或者之前胡代码写的非常胡乱，或者引用胡第三方类库
+
+
+       //老的代码 
+       class   phone
+       {
+            private   $money;
+
+            public  function   __construct($money)
+            {
+                $this->money  = $money;
+            }
+            
+            
+            public function  pay()
+            {
+                return    "支付了".$this->money;
+            }
+            
+       }
+
+
+       //新代码 
+       interface   phoneInterface
+       {
+            function    newPay();
+       }
+
+       class NewPhone  implements  phoneInterface
+       {
+            protected  $phone;
+      
+            public   function   __construct($phone)
+            {
+                 $this->phone = $phone;
+            }
+
+            public function newPay()
+            {
+                 return   "新款需支付".$this->phone->newPay();
+            }       
+       }
+
+       $newPhone = new  NewPhone(new Phone("40"));
+       $newPhone->newPay();
+      
+
       
